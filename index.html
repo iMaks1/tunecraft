@@ -60,19 +60,19 @@
 <!-- Order Form -->
 <section id="order" class="order-section">
     <h2>Place Your Order</h2>
-    <form name="order" method="POST" data-netlify="true">
-    <input type="hidden" name="form-name" value="order" />
-    <p style="display:none;">
-        <label>Don’t fill this out if you're human:
-        <input name="bot-field" />
-        </label>
-    </p>
+    <form name="order" method="POST" data-netlify="true" action="/thank-you.html">
+        <input type="hidden" name="form-name" value="order" />
+        <p style="display:none;">
+            <label>Don’t fill this out if you're human:
+            <input name="bot-field" />
+            </label>
+        </p>
 
-    <input type="text" name="name" placeholder="Your Name" required>
-    <input type="email" name="email" placeholder="Your Email" required>
-    <textarea name="details" placeholder="Tell us about your song..." required></textarea>
+        <input type="text" name="name" placeholder="Your Name" required>
+        <input type="email" name="email" placeholder="Your Email" required>
+        <textarea name="details" placeholder="Tell us about your song..." required></textarea>
 
-    <button type="submit">Submit Order</button>
+        <button type="submit">Submit Order</button>
     </form>
 </section>
 
