@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TuneCraft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <section class="hero">
+        <h1>TuneCraft</h1>
+        <p>Create Your Personalized Song</p>
+        <a href="#order" class="btn">Order Now</a>
+    </section>
+
+    <section class="about">
+        <h2>About TuneCraft</h2>
+        <p>
+            We create custom songs crafted specifically for you.
+            Perfect for birthdays, anniversaries, proposals, or special memories.
+        </p>
+    </section>
+
+    <section id="order" class="order-section">
+        <h2>Place Your Order</h2>
+
+        <form name="order" method="POST" data-netlify="true">
+            <input type="hidden" name="form-name" value="order" />
+
+            <input type="text" name="name" placeholder="Your Name" required>
+            <input type="email" name="email" placeholder="Your Email" required>
+            <textarea name="details" placeholder="Tell us about your song..." required></textarea>
+
+            <button type="submit">Submit Order</button>
+        </form>
+    </section>
+
+    <footer>
+        <p>© 2026 TuneCraft. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
