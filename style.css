@@ -1,3 +1,4 @@
+/* Reset */
 * {
     margin: 0;
     padding: 0;
@@ -11,20 +12,24 @@ body {
     line-height: 1.6;
 }
 
+/* Hero */
 .hero {
     background: linear-gradient(135deg, #240046, #7b2cbf);
-    padding: 120px 20px;
+    padding: 160px 20px;
     text-align: center;
 }
 
 .hero h1 {
-    font-size: 48px;
-    margin-bottom: 20px;
+    font-size: 56px;
+    max-width: 800px;
+    margin: 0 auto 20px;
 }
 
 .hero p {
-    font-size: 20px;
-    margin-bottom: 30px;
+    font-size: 22px;
+    max-width: 600px;
+    margin: 0 auto 30px;
+    opacity: 0.9;
 }
 
 .btn {
@@ -37,11 +42,72 @@ body {
     border-radius: 6px;
 }
 
-.about {
+/* How It Works */
+.how {
+    padding: 100px 20px;
+    text-align: center;
+    background: #140025;
+}
+
+.steps {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    margin-top: 40px;
+    flex-wrap: wrap;
+}
+
+.step {
+    background: #1f0038;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 300px;
+}
+
+/* Benefits */
+.benefits {
     padding: 80px 20px;
     text-align: center;
 }
 
+.benefit-items {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 40px;
+}
+
+.benefit {
+    background: #2a004c;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 250px;
+}
+
+/* Categories */
+.categories {
+    padding: 80px 20px;
+    text-align: center;
+    background: #140025;
+}
+
+.category-items {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 40px;
+}
+
+.category {
+    background: #2a004c;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 200px;
+}
+
+/* Order Form */
 .order-section {
     padding: 80px 20px;
     text-align: center;
@@ -75,6 +141,20 @@ button:hover {
     background: #9d4edd;
 }
 
+/* FAQ */
+.faq {
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.faq-item {
+    margin-bottom: 20px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Footer */
 footer {
     text-align: center;
     padding: 30px;
