@@ -411,42 +411,100 @@
  <form name="create-song-final" netlify netlify-honeypot="bot-field" hidden>
   <input type="text" name="recipientType" />
   <input type="text" name="recipientName" />
+  <input type="text" name="relationship" />
   <input type="text" name="genre" />
-  <input type="text" name="mood" />
-  <input type="text" name="story" />
+  <input type="text" name="voiceGender" />
+  <input type="text" name="qualities" />
+  <input type="text" name="moments" />
+  <input type="text" name="message" />
   <input type="email" name="email" />
   <input type="hidden" name="form-name" value="create-song-final" />
  </form>
  <script>
   (function() {
-    // 1. Capture inputs to sessionStorage as user types/clicks
+    // Helper to find label text for an input
+    function getLabelText(element) {
+      const parentLabel = element.closest('label');
+      if (parentLabel) return parentLabel.innerText;
+      
+      if (element.id) {
+        const labelFor = document.querySelector(`label[for="${element.id}"]`);
+        if (labelFor) return labelFor.innerText;
+      }
+      
+      // Look for preceding text elements
+      let prev = element.previousElementSibling;
+      while (prev) {
+        if (prev.tagName === 'LABEL' || prev.tagName === 'H3' || prev.tagName === 'P' || prev.tagName === 'DIV') {
+             if (prev.innerText && prev.innerText.trim().length > 0) return prev.innerText;
+        }
+        prev = prev.previousElementSibling;
+      }
+
+      // Check parent's siblings (common in grid/flex layouts)
+      const parent = element.parentElement;
+      if (parent) {
+          let parentPrev = parent.previousElementSibling;
+          while (parentPrev) {
+             if (parentPrev.tagName === 'LABEL' || parentPrev.tagName === 'H3' || parentPrev.tagName === 'P' || parentPrev.tagName === 'DIV') {
+                 if (parentPrev.innerText && parentPrev.innerText.trim().length > 0) return parentPrev.innerText;
+             }
+             parentPrev = parentPrev.previousElementSibling;
+          }
+      }
+      return '';
+    }
+
+    function getFieldName(element) {
+      // Priority 1: Use explicit name if available
+      if (element.name) return element.name;
+      
+      // Priority 2: Infer from label/placeholder
+      const text = (getLabelText(element) + ' ' + (element.placeholder || '')).toLowerCase();
+      
+      if (text.includes('email')) return 'email';
+      if (text.includes('name') && !text.includes('user') && !text.includes('login')) return 'recipientName';
+      if (text.includes('relationship')) return 'relationship';
+      if (text.includes('genre')) return 'genre';
+      if (text.includes('voice') || text.includes('gender')) return 'voiceGender';
+      if (text.includes('qualities') || text.includes('characteristics')) return 'qualities';
+      if (text.includes('moments') || text.includes('memories')) return 'moments';
+      if (text.includes('message') || text.includes('story') || text.includes('details')) return 'message';
+      
+      return null;
+    }
+
     function saveToStorage(e) {
-      if(e.target.name) {
-        if(e.target.type === 'radio' || e.target.type === 'checkbox') {
-          if(e.target.checked) sessionStorage.setItem('netlify_' + e.target.name, e.target.value);
+      const target = e.target;
+      if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && target.tagName !== 'SELECT') return;
+      if (target.type === 'submit' || target.type === 'button') return;
+
+      const name = getFieldName(target);
+      if (name) {
+        if(target.type === 'radio' || target.type === 'checkbox') {
+          if(target.checked) sessionStorage.setItem('netlify_' + name, target.value);
         } else {
-          sessionStorage.setItem('netlify_' + e.target.name, e.target.value);
+          sessionStorage.setItem('netlify_' + name, target.value);
         }
       }
     }
+
+    // Capture events aggressively
     document.addEventListener('input', saveToStorage);
     document.addEventListener('change', saveToStorage);
+    document.addEventListener('blur', saveToStorage, true);
 
-    // 2. Intercept Final Submission
     document.addEventListener('click', function(e) {
       const btn = e.target.tagName === 'BUTTON' ? e.target : e.target.closest('button');
       if (!btn) return;
       
       const text = (btn.innerText || '').toLowerCase();
-      // Check for final button keywords
       if (text.includes('create my song') || text.includes('create your song') || (text.includes('submit') && !text.includes('next'))) {
-        
-        // console.log('Final button detected. Preparing Netlify submission...');
         
         const formData = new FormData();
         formData.append('form-name', 'create-song-final');
         
-        // Add data from sessionStorage
+        // 1. Load from Storage
         for (let i = 0; i < sessionStorage.length; i++) {
             const key = sessionStorage.key(i);
             if (key.startsWith('netlify_')) {
@@ -455,19 +513,10 @@
             }
         }
         
-        // Add current visible inputs (overwrites sessionStorage if same name)
+        // 2. Capture current screen inputs (last minute check)
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach(input => {
-            let name = input.name;
-            // Heuristic for nameless inputs
-            if (!name) {
-                const placeholder = (input.placeholder || '').toLowerCase();
-                const label = (input.closest('label')?.innerText || '').toLowerCase();
-                if (placeholder.includes('email') || label.includes('email')) name = 'email';
-                else if (placeholder.includes('name') || label.includes('name')) name = 'recipientName';
-                else if (placeholder.includes('story') || label.includes('story')) name = 'story';
-            }
-            
+            const name = getFieldName(input);
             if (name) {
                 if (input.type === 'radio' || input.type === 'checkbox') {
                     if (input.checked) formData.append(name, input.value);
@@ -477,7 +526,6 @@
             }
         });
 
-        // Send to Netlify
         fetch('/', {
           method: 'POST',
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
