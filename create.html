@@ -102,7 +102,7 @@
      </div>
     </div>
     <div class="flex-1 flex flex-col items-center justify-center">
-     <form class="w-full max-w-xl">
+     <form class="w-full max-w-xl" >
       <div class="flex flex-col items-center mb-10">
        <div class="bg-red-500 text-white px-4 py-1 rounded-full text-sm font-bold mb-4 shadow-lg animate-pulse">
         50% OFF - Limited Time
@@ -541,6 +541,16 @@
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams(formData).toString(),
           keepalive: true
+        }).then(() => {
+            const msg = document.createElement('div');
+            msg.innerHTML = '✅ Form successfully submitted!';
+            msg.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background-color:#22c55e;color:white;padding:12px 24px;border-radius:50px;z-index:99999;box-shadow:0 4px 6px rgba(0,0,0,0.1);font-weight:bold;font-family:system-ui, -apple-system, sans-serif;';
+            document.body.appendChild(msg);
+            setTimeout(() => {
+                msg.style.transition = 'opacity 0.5s ease';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 500);
+            }, 3000);
         }).catch(err => console.error('Netlify submission failed:', err));
       }
     });
