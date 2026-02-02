@@ -104,6 +104,9 @@
     <div class="flex-1 flex flex-col items-center justify-center">
      <form class="w-full max-w-xl">
       <div class="flex flex-col items-center mb-10">
+       <div class="bg-red-500 text-white px-4 py-1 rounded-full text-sm font-bold mb-4 shadow-lg animate-pulse">
+        50% OFF - Limited Time
+       </div>
        <h2 class="text-3xl md:text-4xl font-bold mb-2 text-center font-playfair text-gray-900">
         Let's start with the basics
        </h2>
@@ -405,4 +408,84 @@
     })();
   </script>
  </body>
+ <form name="create-song-final" netlify netlify-honeypot="bot-field" hidden>
+  <input type="text" name="recipientType" />
+  <input type="text" name="recipientName" />
+  <input type="text" name="genre" />
+  <input type="text" name="mood" />
+  <input type="text" name="story" />
+  <input type="email" name="email" />
+  <input type="hidden" name="form-name" value="create-song-final" />
+ </form>
+ <script>
+  (function() {
+    // 1. Capture inputs to sessionStorage as user types/clicks
+    function saveToStorage(e) {
+      if(e.target.name) {
+        if(e.target.type === 'radio' || e.target.type === 'checkbox') {
+          if(e.target.checked) sessionStorage.setItem('netlify_' + e.target.name, e.target.value);
+        } else {
+          sessionStorage.setItem('netlify_' + e.target.name, e.target.value);
+        }
+      }
+    }
+    document.addEventListener('input', saveToStorage);
+    document.addEventListener('change', saveToStorage);
+
+    // 2. Intercept Final Submission
+    document.addEventListener('click', function(e) {
+      const btn = e.target.tagName === 'BUTTON' ? e.target : e.target.closest('button');
+      if (!btn) return;
+      
+      const text = (btn.innerText || '').toLowerCase();
+      // Check for final button keywords
+      if (text.includes('create my song') || text.includes('create your song') || (text.includes('submit') && !text.includes('next'))) {
+        
+        // console.log('Final button detected. Preparing Netlify submission...');
+        
+        const formData = new FormData();
+        formData.append('form-name', 'create-song-final');
+        
+        // Add data from sessionStorage
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key.startsWith('netlify_')) {
+                const cleanKey = key.replace('netlify_', '');
+                formData.append(cleanKey, sessionStorage.getItem(key));
+            }
+        }
+        
+        // Add current visible inputs (overwrites sessionStorage if same name)
+        const inputs = document.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            let name = input.name;
+            // Heuristic for nameless inputs
+            if (!name) {
+                const placeholder = (input.placeholder || '').toLowerCase();
+                const label = (input.closest('label')?.innerText || '').toLowerCase();
+                if (placeholder.includes('email') || label.includes('email')) name = 'email';
+                else if (placeholder.includes('name') || label.includes('name')) name = 'recipientName';
+                else if (placeholder.includes('story') || label.includes('story')) name = 'story';
+            }
+            
+            if (name) {
+                if (input.type === 'radio' || input.type === 'checkbox') {
+                    if (input.checked) formData.append(name, input.value);
+                } else {
+                    formData.append(name, input.value);
+                }
+            }
+        });
+
+        // Send to Netlify
+        fetch('/', {
+          method: 'POST',
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(formData).toString(),
+          keepalive: true
+        }).catch(err => console.error('Netlify submission failed:', err));
+      }
+    });
+  })();
+ </script>
 </html>
