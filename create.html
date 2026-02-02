@@ -102,8 +102,7 @@
      </div>
     </div>
     <div class="flex-1 flex flex-col items-center justify-center">
-     <form class="w-full max-w-xl" name="create-song-step1" method="POST" data-netlify="true">
-      <input type="hidden" name="form-name" value="create-song-step1" />
+     <form class="w-full max-w-xl">
       <div class="flex flex-col items-center mb-10">
        <h2 class="text-3xl md:text-4xl font-bold mb-2 text-center font-playfair text-gray-900">
         Let's start with the basics
@@ -302,28 +301,71 @@
   </iframe>
   <iframe allow="payment *" allowtransparency="true" aria-hidden="true" frameborder="0" name="__privateStripeMetricsController7950" role="presentation" scrolling="no" src="https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=https%3A%2F%2Fprayersong.com%2Fcreate&amp;title=PrayerSong%20%7C%20Turn%20Your%20Prayers%20and%20Stories%20Into%20a%20Song&amp;referrer=&amp;muid=e2e7dfa3-9a77-463c-bfd2-f5eac01172e6575ebf&amp;sid=ac062f2e-b083-40f4-8dee-ecff9ea0b9a75fea6c&amp;version=6&amp;preview=false&amp;__shared_params__[version]=basil" style="border: none !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; visibility: hidden !important; position: fixed !important; height: 1px !important; pointer-events: none !important; user-select: none !important;" tabindex="-1">
   </iframe>
+  <form name="tune-craft-order" netlify hidden>
+    <input type="text" name="recipientType" />
+    <input type="text" name="recipientName" />
+    <input type="text" name="genre" />
+    <input type="text" name="story" />
+    <input type="email" name="email" />
+    <input type="text" name="voice" />
+    <input type="text" name="tempo" />
+    <input type="text" name="mood" />
+    <input type="text" name="occasion" />
+    <input type="text" name="phone_number" />
+    <input type="text" name="extra_info" />
+  </form>
+
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      var form = document.querySelector('form[name="create-song-step1"]');
-      if (form) {
-        form.addEventListener('submit', function(e) {
-          var formData = new FormData(form);
-          var data = new URLSearchParams();
-          for (var pair of formData) {
-              data.append(pair[0], pair[1]);
+    (function() {
+      var capturedData = {};
+
+      // Capture data from any input change
+      document.addEventListener('input', function(e) {
+        if (e.target.name) {
+          capturedData[e.target.name] = e.target.value;
+        }
+      });
+      document.addEventListener('change', function(e) {
+        if (e.target.name) {
+          capturedData[e.target.name] = e.target.value;
+        }
+      });
+
+      // Intercept click on the final button
+      document.addEventListener('click', function(e) {
+        var target = e.target;
+        // Check if the clicked element or its parent is the "Create my song" button
+        var button = target.closest('button') || target;
+        var text = button.textContent || "";
+        
+        // Adjust this check based on the exact text of the final button
+        if (text.toLowerCase().includes('create my song') || text.toLowerCase().includes('create your song')) {
+          console.log('Final button clicked. Submitting data...', capturedData);
+          
+          var form = document.querySelector('form[name="tune-craft-order"]');
+          if (form) {
+            var formData = new FormData(form);
+            // Update formData with captured values
+            for (var key in capturedData) {
+              if (capturedData.hasOwnProperty(key)) {
+                formData.set(key, capturedData[key]);
+              }
+            }
+            formData.set('form-name', 'tune-craft-order');
+
+            fetch('/', {
+              method: 'POST',
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams(formData).toString()
+            }).then(function() {
+              console.log('Order successfully submitted to Netlify');
+            }).catch(function(error) {
+              console.error('Order submission failed', error);
+            });
           }
-          fetch('/', {
-            method: 'POST',
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: data.toString()
-          }).then(function() {
-            console.log('Form successfully submitted to Netlify');
-          }).catch(function(error) {
-            console.error('Form submission failed', error);
-          });
-        });
-      }
-    });
+        }
+      });
+    })();
   </script>
  </body>
 </html>
