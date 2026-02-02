@@ -302,5 +302,28 @@
   </iframe>
   <iframe allow="payment *" allowtransparency="true" aria-hidden="true" frameborder="0" name="__privateStripeMetricsController7950" role="presentation" scrolling="no" src="https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=https%3A%2F%2Fprayersong.com%2Fcreate&amp;title=PrayerSong%20%7C%20Turn%20Your%20Prayers%20and%20Stories%20Into%20a%20Song&amp;referrer=&amp;muid=e2e7dfa3-9a77-463c-bfd2-f5eac01172e6575ebf&amp;sid=ac062f2e-b083-40f4-8dee-ecff9ea0b9a75fea6c&amp;version=6&amp;preview=false&amp;__shared_params__[version]=basil" style="border: none !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; visibility: hidden !important; position: fixed !important; height: 1px !important; pointer-events: none !important; user-select: none !important;" tabindex="-1">
   </iframe>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var form = document.querySelector('form[name="create-song-step1"]');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          var formData = new FormData(form);
+          var data = new URLSearchParams();
+          for (var pair of formData) {
+              data.append(pair[0], pair[1]);
+          }
+          fetch('/', {
+            method: 'POST',
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: data.toString()
+          }).then(function() {
+            console.log('Form successfully submitted to Netlify');
+          }).catch(function(error) {
+            console.error('Form submission failed', error);
+          });
+        });
+      }
+    });
+  </script>
  </body>
 </html>
