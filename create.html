@@ -462,15 +462,24 @@
       // Priority 2: Infer from label/placeholder
       const text = (getLabelText(element) + ' ' + (element.placeholder || '')).toLowerCase();
       
-      if (text.includes('email')) return 'email';
-      if (text.includes('name') && !text.includes('user') && !text.includes('login')) return 'recipientName';
-      if (text.includes('relationship')) return 'relationship';
-      if (text.includes('genre')) return 'genre';
-      if (text.includes('voice') || text.includes('gender')) return 'voiceGender';
-      if (text.includes('qualities') || text.includes('characteristics')) return 'qualities';
-      if (text.includes('moments') || text.includes('memories')) return 'moments';
-      if (text.includes('message') || text.includes('story') || text.includes('details')) return 'message';
+      // Specific checks first
+      if (text.includes('email') || text.includes('e-mail')) return 'email';
       
+      // Check for Moments/Memories BEFORE relationship (to avoid "relationship moments" false positives)
+      if (text.includes('moments') || text.includes('memories') || text.includes('together')) return 'moments';
+      
+      if (text.includes('relationship') || text.includes('who is this for')) return 'relationship';
+      
+      if (text.includes('voice') || text.includes('gender') || text.includes('singer')) return 'voiceGender';
+      
+      if (text.includes('genre') || text.includes('style')) return 'genre';
+      
+      if (text.includes('qualities') || text.includes('traits') || text.includes('describe')) return 'qualities';
+      
+      if (text.includes('message') || text.includes('story') || text.includes('details') || text.includes('instruction')) return 'message';
+      
+      if (text.includes('name') && !text.includes('user') && !text.includes('login')) return 'recipientName';
+
       return null;
     }
 
@@ -509,7 +518,8 @@
             const key = sessionStorage.key(i);
             if (key.startsWith('netlify_')) {
                 const cleanKey = key.replace('netlify_', '');
-                formData.append(cleanKey, sessionStorage.getItem(key));
+                // Use set instead of append to avoid duplicates
+                formData.set(cleanKey, sessionStorage.getItem(key));
             }
         }
         
@@ -519,9 +529,9 @@
             const name = getFieldName(input);
             if (name) {
                 if (input.type === 'radio' || input.type === 'checkbox') {
-                    if (input.checked) formData.append(name, input.value);
+                    if (input.checked) formData.set(name, input.value);
                 } else {
-                    formData.append(name, input.value);
+                    formData.set(name, input.value);
                 }
             }
         });
