@@ -319,33 +319,69 @@
     (function() {
       var capturedData = {};
 
+      function normalizeName(name) {
+        if (!name) return null;
+        var lower = name.toLowerCase();
+        if (lower.includes('name')) return 'recipientName';
+        if (lower.includes('email')) return 'email';
+        if (lower.includes('story') || lower.includes('tell us')) return 'story';
+        if (lower.includes('genre') || lower.includes('style')) return 'genre';
+        if (lower.includes('mood') || lower.includes('feel')) return 'mood';
+        if (lower.includes('voice') || lower.includes('singer')) return 'voice';
+        if (lower.includes('tempo') || lower.includes('speed')) return 'tempo';
+        if (lower.includes('occasion')) return 'occasion';
+        if (lower.includes('phone')) return 'phone_number';
+        return name;
+      }
+
+      function getFieldName(element) {
+        if (element.name) return element.name;
+        
+        // Try to find a label
+        var id = element.id;
+        if (id) {
+          var label = document.querySelector('label[for="' + id + '"]');
+          if (label) return normalizeName(label.innerText);
+        }
+        
+        // Try placeholder
+        if (element.placeholder) return normalizeName(element.placeholder);
+        
+        // Try closest label
+        var parentLabel = element.closest('label');
+        if (parentLabel) return normalizeName(parentLabel.innerText);
+        
+        // Try preceding label
+        var prev = element.previousElementSibling;
+        if (prev && prev.tagName === 'LABEL') return normalizeName(prev.innerText);
+        
+        return null;
+      }
+
+      function capture(e) {
+        var name = getFieldName(e.target);
+        if (name) {
+          capturedData[name] = e.target.value;
+          // console.log('Captured:', name, e.target.value);
+        }
+      }
+
       // Capture data from any input change
-      document.addEventListener('input', function(e) {
-        if (e.target.name) {
-          capturedData[e.target.name] = e.target.value;
-        }
-      });
-      document.addEventListener('change', function(e) {
-        if (e.target.name) {
-          capturedData[e.target.name] = e.target.value;
-        }
-      });
+      document.addEventListener('input', capture);
+      document.addEventListener('change', capture);
 
       // Intercept click on the final button
       document.addEventListener('click', function(e) {
         var target = e.target;
-        // Check if the clicked element or its parent is the "Create my song" button
         var button = target.closest('button') || target;
-        var text = button.textContent || "";
+        var text = (button.textContent || "").toLowerCase();
         
-        // Adjust this check based on the exact text of the final button
-        if (text.toLowerCase().includes('create my song') || text.toLowerCase().includes('create your song')) {
+        if (text.includes('create my song') || text.includes('create your song') || text.includes('submit')) {
           console.log('Final button clicked. Submitting data...', capturedData);
           
           var form = document.querySelector('form[name="tune-craft-order"]');
           if (form) {
             var formData = new FormData(form);
-            // Update formData with captured values
             for (var key in capturedData) {
               if (capturedData.hasOwnProperty(key)) {
                 formData.set(key, capturedData[key]);
@@ -356,7 +392,8 @@
             fetch('/', {
               method: 'POST',
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
-              body: new URLSearchParams(formData).toString()
+              body: new URLSearchParams(formData).toString(),
+              keepalive: true
             }).then(function() {
               console.log('Order successfully submitted to Netlify');
             }).catch(function(error) {
