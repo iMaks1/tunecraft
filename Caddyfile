@@ -1,0 +1,7 @@
+www.tunecraft.net {
+    redir https://tunecraft.net{uri}
+}
+
+tunecraft.net {
+    reverse_proxy app:3000
+}

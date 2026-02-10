@@ -1,0 +1,55 @@
+# Use a lightweight Node.js base image
+FROM node:20-alpine
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy package files first to leverage Docker cache for dependencies
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose the port your app runs on (assuming 3000 based on common defaults)
+EXPOSE 3000
+
+# Start the application
+CMD ["node", "server.js"] 
+services:
+  # The Node.js Application Service
+  app:
+    build: .
+    restart: always
+    container_name: tunecraft_app
+    environment:
+      - PORT=3000 # Ensure server.js listens on this port
+      # Add other environment variables here if needed
+    networks:
+      - tunecraft_net
+
+  # The Caddy Web Server Service
+  caddy:
+    image: caddy:alpine
+    restart: always
+    container_name: tunecraft_caddy
+    ports:
+      - "80:80"   # HTTP
+      - "443:443" # HTTPS (if you configure a domain later)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile # Mount the config
+      - caddy_data:/data # Persist SSL certificates
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - tunecraft_net
+
+networks:
+  tunecraft_net:
+
+volumes:
+  caddy_data:
+  caddy_config:
