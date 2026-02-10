@@ -872,13 +872,22 @@ p {
 }
 
 @media (max-width: 1200px) {
-    .video-grid {
+    .video-grid,
+    .video-grid.grid-5 {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
+@media (max-width: 900px) {
+    .video-grid,
+    .video-grid.grid-5 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 600px) {
-    .video-grid {
+    .video-grid,
+    .video-grid.grid-5 {
         grid-template-columns: 1fr;
     }
 }

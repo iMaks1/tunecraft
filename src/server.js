@@ -40,6 +40,19 @@ function saveOrder(order) {
 app.use(cors());
 app.use(bodyParser.json());
 
+// Basic Auth Middleware
+const checkAuth = (req, res, next) => {
+    // Credentials: TuneCraftAdmin1002 / Admin1002#
+    const auth = {login: 'TuneCraftAdmin1002', password: 'Admin1002#'}
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || ''
+    const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':')
+    if (login && password && login === auth.login && password === auth.password) {
+        return next()
+    }
+    res.set('WWW-Authenticate', 'Basic realm="TuneCraft Admin"')
+    res.status(401).send('Authentication required.')
+}
+
 // Serve static assets from specific directories
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
@@ -147,6 +160,26 @@ app.get('/verify-payment', async (req, res) => {
     } catch (error) {
         console.error('Error verifying payment:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Admin Routes
+app.get('/secret-admin-panel', checkAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+app.get('/api/admin/orders', checkAuth, (req, res) => {
+    try {
+        if (fs.existsSync(DB_FILE)) {
+            const fileContent = fs.readFileSync(DB_FILE, 'utf8');
+            const orders = JSON.parse(fileContent || '[]');
+            res.json(orders);
+        } else {
+            res.json([]);
+        }
+    } catch (err) {
+        console.error('Error reading orders for admin:', err);
+        res.status(500).json({ error: 'Failed to fetch orders' });
     }
 });
 

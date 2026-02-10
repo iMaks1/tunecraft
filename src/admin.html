@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuneCraft Admin</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; background: #f3f4f6; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; font-weight: 600; }
+        tr:hover { background-color: #f5f5f5; }
+        .status-paid { color: #10b981; font-weight: bold; }
+        .status-pending { color: #f59e0b; font-weight: bold; }
+        .details-btn { background: #3b82f6; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 20px; width: 80%; max-width: 600px; border-radius: 8px; position: relative; }
+        .close { position: absolute; right: 20px; top: 10px; font-size: 24px; cursor: pointer; }
+        pre { background: #f1f1f1; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>TuneCraft Orders</h1>
+            <button onclick="logout()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Logout</button>
+        </div>
+        
+        <div id="loading">Loading orders...</div>
+        
+        <table id="ordersTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+        </table>
+    </div>
+
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Order Details</h2>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // Check if we are logged in (basic check)
+        fetch('/api/admin/orders')
+            .then(res => {
+                if (res.status === 401) {
+                    window.location.reload(); // Trigger browser login prompt
+                }
+                return res.json();
+            })
+            .then(orders => {
+                const tbody = document.getElementById('ordersBody');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('ordersTable').style.display = 'table';
+                
+                // Sort by date desc
+                orders.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                orders.forEach(order => {
+                    const tr = document.createElement('tr');
+                    const date = new Date(order.date).toLocaleDateString() + ' ' + new Date(order.date).toLocaleTimeString();
+                    const amount = order.amount_total ? '$' + (order.amount_total / 100).toFixed(2) : '-';
+                    const statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
+                    const email = order.formData?.email || 'N/A';
+                    
+                    tr.innerHTML = `
+                        <td>${date}</td>
+                        <td>${order.id}</td>
+                        <td>${email}</td>
+                        <td>${amount}</td>
+                        <td class="${statusClass}">${order.status.toUpperCase()}</td>
+                        <td><button class="details-btn" onclick='showDetails(${JSON.stringify(order).replace(/'/g, "&#39;")})'>View</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                document.getElementById('loading').textContent = 'Error loading orders. Make sure you are logged in.';
+                console.error(err);
+            });
+
+        function showDetails(order) {
+            const modal = document.getElementById('orderModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            // Format details nicely
+            let html = `<p><strong>Order ID:</strong> ${order.id}</p>`;
+            html += `<p><strong>Status:</strong> ${order.status}</p>`;
+            html += `<p><strong>Stripe Session:</strong> ${order.stripe_session_id || 'N/A'}</p>`;
+            
+            if (order.formData) {
+                html += `<h3>Form Data</h3>`;
+                html += `<ul>`;
+                for (const [key, value] of Object.entries(order.formData)) {
+                    html += `<li><strong>${key}:</strong> ${value}</li>`;
+                }
+                html += `</ul>`;
+            }
+            
+            modalBody.innerHTML = html;
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').style.display = 'none';
+        }
+
+        function logout() {
+            // Basic auth logout hack
+            const url = window.location.protocol + '//logout:logout@' + window.location.host + window.location.pathname;
+            window.location.href = url;
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('orderModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
