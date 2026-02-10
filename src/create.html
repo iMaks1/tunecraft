@@ -716,9 +716,28 @@
                             <!-- Left Column -->
                             <div class="order-left">
                                 <div class="form-group mb-6">
-                                    <label class="form-label">Expected song delivery date:</label>
-                                    <div class="p-3 bg-green-50 text-green-700 border border-green-200 rounded-lg font-bold" style="background: #ecfdf5; color: #047857; padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> <span class="delivery-date-display"></span>
+                                    <label class="form-label">Choose Delivery Speed:</label>
+                                    <div class="radio-grid" style="flex-direction: column;">
+                                        <div class="radio-option" style="width: 100%;">
+                                            <input type="radio" name="deliverySpeed" value="standard" id="speed-standard" checked>
+                                            <label for="speed-standard" class="radio-label" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                    <span>Standard (7 Days)</span>
+                                                    <span class="discount-badge" style="margin: 0; padding: 2px 8px; font-size: 0.7rem; animation: none;">50% OFF</span>
+                                                </div>
+                                                <span class="delivery-date-display-standard" style="font-size: 0.9rem; font-weight: bold; color: var(--primary-color);"></span>
+                                            </label>
+                                        </div>
+                                        <div class="radio-option" style="width: 100%;">
+                                            <input type="radio" name="deliverySpeed" value="express" id="speed-express">
+                                            <label for="speed-express" class="radio-label" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                    <span>Express (2 Days)</span>
+                                                    <span class="discount-badge" style="margin: 0; padding: 2px 8px; font-size: 0.7rem; animation: none;">50% OFF</span>
+                                                </div>
+                                                <span class="delivery-date-display-express" style="font-size: 0.9rem; font-weight: bold; color: var(--primary-color);"></span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -841,14 +860,14 @@
                                         </div>
                                     </div>
 
-                                    <div class="total-section">
+                                        <div class="total-section">
                                         <div class="total-row">
                                             <div class="total-label">Total Price</div>
                                             <div class="total-price-group">
                                                 <div class="discount-tag">50% OFF TODAY</div>
                                                 <div class="price-display">
-                                                    <span class="old-price">$199</span>
-                                                    <span class="new-price">$99</span>
+                                                    <span class="old-price" id="totalOldPrice">$100</span>
+                                                    <span class="new-price" id="totalNewPrice">$50</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -901,7 +920,7 @@
                                             <span class="text-primary" style="color: var(--primary-color);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Secure payment processing
                                         </li>
                                         <li class="flex items-center gap-2 mb-2" style="display: flex; align-items: center; gap: 10px;">
-                                            <span class="text-primary" style="color: var(--primary-color);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Delivered in just 7 days
+                                            <span class="text-primary" style="color: var(--primary-color);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> Delivered in 2-7 days
                                         </li>
                                     </ul>
                                 </div>
@@ -979,7 +998,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 TuneCraft. All rights reserved.</p>
+                <p>&copy; 2025 TuneCraft. All rights reserved. | DIGITAL SOLUTIONS PROVIDED BY <a href="https://uniconmediagroup.com" target="_blank" style="color: inherit; text-decoration: none; font-weight: 700;">UNICON MEDIA GROUP</a></p>
             </div>
         </div>
     </footer>
@@ -1075,12 +1094,47 @@
 
             // Initialize Date
             const today = new Date();
-            const deliveryDate = new Date(today);
-            deliveryDate.setDate(today.getDate() + 7);
             const dateOptions = { month: 'short', day: 'numeric' };
-            const formattedDate = deliveryDate.toLocaleDateString('en-US', dateOptions);
+
+            // Standard Date (7 days)
+            const standardDate = new Date(today);
+            standardDate.setDate(today.getDate() + 7);
+            const formattedStandardDate = standardDate.toLocaleDateString('en-US', dateOptions);
+
+            // Express Date (2 days)
+            const expressDate = new Date(today);
+            expressDate.setDate(today.getDate() + 2);
+            const formattedExpressDate = expressDate.toLocaleDateString('en-US', dateOptions);
             
-            deliveryDateDisplays.forEach(el => el.textContent = formattedDate);
+            // Update Displays
+            document.querySelectorAll('.delivery-date-display-standard').forEach(el => el.textContent = formattedStandardDate);
+            document.querySelectorAll('.delivery-date-display-express').forEach(el => el.textContent = formattedExpressDate);
+            // Default summary delivery date
+            document.querySelector('.delivery-date-display').textContent = formattedStandardDate;
+
+            // Delivery Speed Selection Logic
+            const deliverySpeedRadios = document.querySelectorAll('input[name="deliverySpeed"]');
+            const totalOldPrice = document.getElementById('totalOldPrice');
+            const totalNewPrice = document.getElementById('totalNewPrice');
+            const deliveryDateDisplaySummary = document.querySelector('.delivery-date-display');
+
+            function updatePriceAndDate() {
+                const selectedSpeed = document.querySelector('input[name="deliverySpeed"]:checked').value;
+                
+                if (selectedSpeed === 'express') {
+                    totalOldPrice.textContent = '$199';
+                    totalNewPrice.textContent = '$99';
+                    deliveryDateDisplaySummary.textContent = formattedExpressDate;
+                } else {
+                    totalOldPrice.textContent = '$100';
+                    totalNewPrice.textContent = '$50';
+                    deliveryDateDisplaySummary.textContent = formattedStandardDate;
+                }
+            }
+
+            deliverySpeedRadios.forEach(radio => {
+                radio.addEventListener('change', updatePriceAndDate);
+            });
 
             function updateStep() {
                 // Scroll to top
@@ -1127,12 +1181,13 @@
                 
                 recipientNameDisplays.forEach(el => el.textContent = name);
                 
-                // Sibling Discount Logic
-                if (type === 'Sibling') {
-                    siblingDiscountBox.style.display = 'block';
-                } else {
-                    siblingDiscountBox.style.display = 'none';
-                }
+                // Sibling Discount Logic - Disabled for new pricing policy
+                // if (type === 'Sibling') {
+                //    siblingDiscountBox.style.display = 'block';
+                // } else {
+                //    siblingDiscountBox.style.display = 'none';
+                // }
+                siblingDiscountBox.style.display = 'none';
                 
                 document.querySelector('.create-song-section').scrollIntoView({ behavior: 'smooth' });
             }
@@ -1344,11 +1399,13 @@
                 // Update UI Elements on Order Page
                 recipientNameDisplays.forEach(el => el.textContent = newName || 'your loved one');
                 
-                if (newType === 'Sibling') {
-                    siblingDiscountBox.style.display = 'block';
-                } else {
-                    siblingDiscountBox.style.display = 'none';
-                }
+                // Sibling Discount Logic - Disabled
+                // if (newType === 'Sibling') {
+                //     siblingDiscountBox.style.display = 'block';
+                // } else {
+                //     siblingDiscountBox.style.display = 'none';
+                // }
+                siblingDiscountBox.style.display = 'none';
             }
         });
     </script>

@@ -8,6 +8,33 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DB_FILE = path.join(__dirname, 'orders.json');
+
+// Ensure DB file exists
+if (!fs.existsSync(DB_FILE)) {
+    fs.writeFileSync(DB_FILE, JSON.stringify([]));
+}
+
+// Helper function to save order
+function saveOrder(order) {
+    let orders = [];
+    try {
+        if (fs.existsSync(DB_FILE)) {
+            const fileContent = fs.readFileSync(DB_FILE, 'utf8');
+            orders = JSON.parse(fileContent || '[]');
+        }
+    } catch (err) {
+        console.error('Error reading DB file:', err);
+    }
+    
+    orders.push(order);
+    
+    try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(orders, null, 2));
+    } catch (err) {
+        console.error('Error writing to DB file:', err);
+    }
+}
 
 // Middleware
 app.use(cors());
@@ -48,11 +75,11 @@ app.post('/create-checkout-session', async (req, res) => {
         
         saveOrder(orderData);
 
-        // Determine price based on logic (e.g., Sibling discount)
-        // Default price
-        let unitAmount = 19900; // $199.00 in cents
+        // Determine price based on delivery speed
+        // Default price (Standard)
+        let unitAmount = 5000; // $50.00 in cents
         
-        if (formData.recipientType === 'Sibling') {
+        if (formData.deliverySpeed === 'express') {
              unitAmount = 9900; // $99.00 in cents
         }
 
