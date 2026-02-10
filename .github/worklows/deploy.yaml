@@ -1,0 +1,99 @@
+name: Deploy via SSH
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to server via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        debug: true
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          #!/usr/bin/env bash
+          
+          set -euo pipefail
+
+          DEPLOY_DIR="/opt/TuneCraft"
+          REPO_DIR="$DEPLOY_DIR/tunecraft"
+          COMPOSE_DIR="$REPO_DIR/src"
+          ENV_FILE="$DEPLOY_DIR/.env"
+          
+          mkdir -p "$DEPLOY_DIR"
+          cd "$DEPLOY_DIR"
+          
+          # Clone or update repo
+          if [ ! -d "$REPO_DIR/.git" ]; then
+            git clone git@github-TuneCraft:iMaks1/tunecraft.git
+          else
+            cd "$REPO_DIR"
+            git reset --hard
+            
+            git remote set-url origin git@github-TuneCraft:iMaks1/tunecraft.git
+            
+            git pull origin main
+            cd "$DEPLOY_DIR"
+          fi
+          
+          cd "$COMPOSE_DIR"
+          
+          # Choose compose command (prefer docker compose, then plugin, then legacy)
+          if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+            COMPOSE_CMD="docker compose"
+          elif [ -x "/usr/libexec/docker/cli-plugins/docker-compose" ]; then
+            COMPOSE_CMD="/usr/libexec/docker/cli-plugins/docker-compose"
+          elif command -v docker-compose >/dev/null 2>&1; then
+            COMPOSE_CMD="docker-compose"
+          else
+            echo "ERROR: No Docker Compose available." >&2
+            docker --version || true
+            exit 1
+          fi
+          
+          echo "Using compose command: $COMPOSE_CMD"
+          
+          # If env file exists — export variables into the current shell carefully (ignore comments, blank lines, and leading "export ")
+          if [ -f "$ENV_FILE" ]; then
+            echo "Loading environment variables from $ENV_FILE ..."
+            # Read safe KEY=VAL lines, skip comments and empty lines, strip leading "export "
+            # This preserves quoted values and spaces within quotes.
+            while IFS= read -r line || [ -n "$line" ]; do
+              # Trim leading/trailing spaces
+              trimmed="$(printf '%s' "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+              [ -z "$trimmed" ] && continue
+              case "$trimmed" in
+                \#*) continue ;;           # skip comments
+              esac
+              # remove leading "export " if present
+              trimmed="${trimmed#export }"
+              # Only process lines containing =
+              if printf '%s' "$trimmed" | grep -q '='; then
+                # Use eval to allow quoted values; safe enough because env file is expected to be trusted on deployment host.
+                eval "printf -v _k '%s' \"${trimmed%%=*}\""
+                eval "printf -v _v '%s' \"${trimmed#*=}\""
+                export "$_k=$_v"
+              fi
+            done < "$ENV_FILE"
+          else
+            echo "No env file found at $ENV_FILE — continuing with environment as-is."
+          fi
+          
+          # Now run compose WITHOUT --env-file (compose will inherit exported variables)
+          # Use eval to allow multiword COMPOSE_CMD like "docker compose"
+          eval "$COMPOSE_CMD up -d --build"
+          
+          # cleanup
+          docker image prune -f || true
+          
+          echo "✅ Deployment complete!"
