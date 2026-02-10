@@ -34,7 +34,7 @@ app.post('/create-checkout-session', async (req, res) => {
     try {
         const formData = req.body;
         const DOMAIN = process.env.DOMAIN || 'http://localhost:3000';
-
+        console.log("Domain: " + DOMAIN)
         // Create a unique Order ID
         const orderId = 'ORD-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
         
