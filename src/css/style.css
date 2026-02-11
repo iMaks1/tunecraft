@@ -628,9 +628,32 @@ p {
 
 .footer-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    gap: 60px;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px;
     margin-bottom: 60px;
+}
+
+.social-links {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.social-icon {
+    color: #9ca3af;
+    transition: color 0.3s, transform 0.3s;
+    display: flex;
+    align-items: center;
+}
+
+.social-icon:hover {
+    color: var(--white);
+    transform: translateY(-3px);
+}
+
+.social-icon svg {
+    width: 24px;
+    height: 24px;
 }
 
 .footer-col h4 {
@@ -707,6 +730,10 @@ p {
     .footer-logo, .logo-2 {
         margin: 0 auto 20px;
     }
+
+    .social-links {
+        justify-content: center;
+    }
     
     .hero {
         height: auto;
@@ -778,7 +805,7 @@ p {
 
 .video-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 20px;
 }
 
@@ -799,6 +826,9 @@ p {
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     background: #000;
+    max-height: 75vh;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .video-testimonial {
@@ -865,36 +895,44 @@ p {
     margin-left: 4px; /* Optical center adjustment for play icon */
 }
 
-@media (max-width: 1400px) {
-    .video-grid.grid-5 {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
 @media (max-width: 1200px) {
     .video-grid,
     .video-grid.grid-5 {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
 @media (max-width: 900px) {
     .video-grid,
     .video-grid.grid-5 {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (max-width: 600px) {
     .video-grid,
     .video-grid.grid-5 {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .video-testimonial p {
+        font-size: 0.9rem;
+    }
+    
+    .video-testimonial {
+        padding: 10px;
     }
 }
 
-@media (max-width: 480px) {
-    .video-grid {
-        gap: 15px;
+@media (max-width: 400px) {
+    .video-grid,
+    .video-grid.grid-5 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .video-item {
+        max-height: 60vh;
     }
 }
 
