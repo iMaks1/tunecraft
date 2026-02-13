@@ -5,34 +5,42 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_FILE = path.join(__dirname, 'orders.json');
 
-// Ensure DB file exists
-if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify([]));
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+    console.error('CRITICAL ERROR: MONGODB_URI is not defined');
 }
 
+mongoose.connect(MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
+// Order Schema
+const orderSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    status: { type: String, default: 'pending_payment' },
+    date: { type: Date, default: Date.now },
+    formData: Object,
+    stripe_session_id: String,
+    amount_total: Number,
+    payment_status: String
+});
+
+const Order = mongoose.model('Order', orderSchema);
+
 // Helper function to save order
-function saveOrder(order) {
-    let orders = [];
+async function saveOrder(orderData) {
     try {
-        if (fs.existsSync(DB_FILE)) {
-            const fileContent = fs.readFileSync(DB_FILE, 'utf8');
-            orders = JSON.parse(fileContent || '[]');
-        }
+        const order = new Order(orderData);
+        await order.save();
+        console.log('Order saved to MongoDB:', orderData.id);
     } catch (err) {
-        console.error('Error reading DB file:', err);
-    }
-    
-    orders.push(order);
-    
-    try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(orders, null, 2));
-    } catch (err) {
-        console.error('Error writing to DB file:', err);
+        console.error('Error saving to MongoDB:', err);
     }
 }
 
@@ -82,11 +90,10 @@ app.post('/create-checkout-session', async (req, res) => {
         const orderData = {
             id: orderId,
             status: 'pending_payment',
-            date: new Date().toISOString(),
             formData: formData
         };
         
-        saveOrder(orderData);
+        await saveOrder(orderData);
 
         // Determine price based on delivery speed
         // Default price (Standard)
@@ -141,19 +148,23 @@ app.get('/verify-payment', async (req, res) => {
         const session = await stripe.checkout.sessions.retrieve(session_id);
         
         if (session.payment_status === 'paid') {
-            // Update local order status
-            const orders = JSON.parse(fs.readFileSync(DB_FILE));
-            const orderIndex = orders.findIndex(o => o.id === order_id);
+            // Update MongoDB order status
+            const order = await Order.findOneAndUpdate(
+                { id: order_id },
+                { 
+                    status: 'paid',
+                    stripe_session_id: session_id,
+                    amount_total: session.amount_total,
+                    payment_status: session.payment_status
+                },
+                { new: true }
+            );
             
-            if (orderIndex !== -1) {
-                orders[orderIndex].status = 'paid';
-                orders[orderIndex].stripe_session_id = session_id;
-                orders[orderIndex].amount_total = session.amount_total;
-                orders[orderIndex].payment_status = session.payment_status;
-                fs.writeFileSync(DB_FILE, JSON.stringify(orders, null, 2));
+            if (order) {
+                res.json({ success: true, order });
+            } else {
+                res.status(404).json({ error: 'Order not found' });
             }
-            
-            res.json({ success: true, order: orders[orderIndex] });
         } else {
             res.json({ success: false, status: session.payment_status });
         }
@@ -168,17 +179,12 @@ app.get('/secret-admin-panel', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-app.get('/api/admin/orders', checkAuth, (req, res) => {
+app.get('/api/admin/orders', checkAuth, async (req, res) => {
     try {
-        if (fs.existsSync(DB_FILE)) {
-            const fileContent = fs.readFileSync(DB_FILE, 'utf8');
-            const orders = JSON.parse(fileContent || '[]');
-            res.json(orders);
-        } else {
-            res.json([]);
-        }
+        const orders = await Order.find().sort({ date: -1 });
+        res.json(orders);
     } catch (err) {
-        console.error('Error reading orders for admin:', err);
+        console.error('Error fetching orders from MongoDB:', err);
         res.status(500).json({ error: 'Failed to fetch orders' });
     }
 });
