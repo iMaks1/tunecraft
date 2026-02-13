@@ -10,11 +10,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://maksly1008_db_user:ECKfzqLlpUlraSv5@tunecraft.wpu893s.mongodb.net/tunecraft?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI;
 
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB Atlas'))
-    .catch(err => console.error('MongoDB connection error:', err));
+if (!MONGODB_URI) {
+    console.error('CRITICAL ERROR: MONGODB_URI is not defined in environment variables!');
+}
+
+mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+})
+    .then(() => console.log('✅ Connected to MongoDB Atlas'))
+    .catch(err => console.error('❌ MongoDB connection error:', err.message));
+
+// Monitor connection
+mongoose.connection.on('error', err => {
+    console.error('Mongoose connection error:', err);
+});
 
 // Define Order Schema
 const orderSchema = new mongoose.Schema({
@@ -28,27 +40,6 @@ const orderSchema = new mongoose.Schema({
 });
 
 const Order = mongoose.model('Order', orderSchema);
-
-// Helper function to save order
-function saveOrder(order) {
-    let orders = [];
-    try {
-        if (fs.existsSync(DB_FILE)) {
-            const fileContent = fs.readFileSync(DB_FILE, 'utf8');
-            orders = JSON.parse(fileContent || '[]');
-        }
-    } catch (err) {
-        console.error('Error reading DB file:', err);
-    }
-    
-    orders.push(order);
-    
-    try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(orders, null, 2));
-    } catch (err) {
-        console.error('Error writing to DB file:', err);
-    }
-}
 
 // Middleware
 app.use(cors());
