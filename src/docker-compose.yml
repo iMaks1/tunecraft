@@ -8,6 +8,7 @@ services:
       - PORT=3000 # Ensure server.js listens on this port
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - DOMAIN=${DOMAIN}
+      - MONGODB_URI=${MONGODB_URI}
     networks:
       - tunecraft_net
 
