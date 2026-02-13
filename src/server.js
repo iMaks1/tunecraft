@@ -10,10 +10,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://maksly1008_db_user:ECKfzqLlpUlraSv5@tunecraft.wpu893s.mongodb.net/tunecraft?retryWrites=true&w=majority';
 
-if (!MONGODB_URI) {
-    console.error('CRITICAL ERROR: MONGODB_URI is not defined in environment variables!');
+if (!process.env.MONGODB_URI) {
+    console.warn('WARNING: MONGODB_URI is not defined in environment variables, using fallback URI');
 }
 
 mongoose.connect(MONGODB_URI, {
